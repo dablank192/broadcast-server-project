@@ -30,6 +30,7 @@ The application allows multiple clients to connect concurrently, set custom user
 
 ```bash
 pip install websockets
+```
 
 ## 🏃 Getting Started
 
