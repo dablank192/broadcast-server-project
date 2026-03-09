@@ -1,0 +1,76 @@
+<!-- I USED AI TO GENERATE THIS CODE SO THAT YOU COULD TEST THE SERVER ON YOUR WEB BROWSER (I don't really know how the code work tho :v) -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Broadcast Server</title>
+    <style>
+        .system-msg { color: gray; font-size: 0.9em; text-align: center; }
+        .chat-msg { margin: 5px 0; }
+        .sender-name { color: blue; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Broadcast Server</h2>
+    
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="usernameInput" placeholder="Enter your username">
+        <button onclick="setName()">Change Username</button>
+    </div>
+
+    <div id="chatbox" style="height: 300px; border: 1px solid black; overflow-y: scroll; margin-bottom: 10px; padding: 10px;"></div>
+    
+    <input type="text" id="messageInput" placeholder="Enter message" autocomplete="off" style="width: 70%;">
+    <button onclick="sendMessage()">Gửi</button>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8000"); // CHANGE TO YOUR PORTE IF NEEDED
+        const chatbox = document.getElementById("chatbox");
+        const messageInput = document.getElementById("messageInput");
+        const usernameInput = document.getElementById("usernameInput");
+
+        ws.onopen = function() {
+            chatbox.innerHTML += "<p class='system-msg'>Server connected!</p>";
+        };
+
+        // GET JSON FROM SERVER
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data); // GET JSON
+            
+            if (data.type === "system") {
+                chatbox.innerHTML += `<p class='system-msg'>${data.message}</p>`;
+            } else if (data.type === "chat") {
+                chatbox.innerHTML += `<p class='chat-msg'><span class='sender-name'>${data.sender}:</span> ${data.message}</p>`;
+            }
+            
+            chatbox.scrollTop = chatbox.scrollHeight;
+        };
+
+        // CHANGE NAME FUNC
+        function setName() {
+            const name = usernameInput.value.trim();
+            if (name) {
+                // Đóng gói thành JSON lệnh set_name
+                const payload = { type: "set_name", username: name };
+                ws.send(JSON.stringify(payload));
+                usernameInput.value = "";
+            }
+        }
+
+        // SEND MESSAGE FUNC
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                // TO JSON
+                const payload = { type: "chat", message: text };
+                ws.send(JSON.stringify(payload));
+                
+                // DISPLAY ON USER MACHINE
+                chatbox.innerHTML += `<p class='chat-msg'><span class='sender-name' style='color: green;'>Bạn:</span> ${text}</p>`;
+                messageInput.value = ""; 
+                chatbox.scrollTop = chatbox.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
